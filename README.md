@@ -82,3 +82,7 @@ type Note = {
 - Auto-save is debounced to avoid excessive storage writes while preserving changes quickly.
 - Markdown support is intentionally basic and dependency-free: headings, bold text, and unordered lists.
 - Pinned notes are always sorted above unpinned notes, then ordered by the selected date mode.
+
+## Contributors
+
+- [mallareddygariharikareddy](https://github.com/mallareddygariharikareddy)
