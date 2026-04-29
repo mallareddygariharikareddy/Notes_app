@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Notes",
+    "slug": "notes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.notes"
+    },
+    "android": {
+      "package": "com.example.notes",
+      "adaptiveIcon": {
+        "backgroundColor": "#F8F5EE"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
