@@ -1,6 +1,6 @@
 # Notes
 
-A clean, offline-first mobile notes app built with React Native and Expo. It supports creating, editing, deleting, searching, sorting, pinning, tagging, markdown preview, dark mode, and exporting notes as text files.
+A clean,  mobile notes app built with React Native and Expo. It supports creating, editing, deleting, searching, sorting, pinning, tagging, markdown preview, dark mode, and exporting notes as text files.
 
 ## Setup
 
