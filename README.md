@@ -6,14 +6,52 @@ A clean,  mobile notes app built with React Native and Expo. It supports creatin
 
 ```bash
 npm install
-npm start
+npm run open
 ```
 
-Run on a device or simulator:
+`npm run open` asks how you want to launch the app:
+
+```text
+1. Expo Go
+2. Native CLI/dev build
+```
+
+Use **Expo Go** for the fastest preview loop. Use **Native CLI/dev build** when you want a closer production-style Android or iOS build and have the native toolchain installed.
+
+## Direct Run Commands
+
+Expo Go:
 
 ```bash
-npm run android
-npm run ios
+npm run start:expo
+npm run android:expo
+npm run ios:expo
+```
+
+Native CLI/dev build:
+
+```bash
+npm run android:cli
+npm run ios:cli
+```
+
+On Windows, `npm run ios:cli` is not available because iOS native builds require macOS with Xcode. Use Expo Go locally, or use an EAS cloud build:
+
+```bash
+npm run ios:cloud
+```
+
+For `npm run android:cli`, install Android Studio and the Android SDK first. Then make sure `adb` is available and set `ANDROID_HOME`, usually:
+
+```powershell
+$env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"
+$env:Path="$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:Path"
+```
+
+Metro for an installed native dev client:
+
+```bash
+npm run start:cli
 ```
 
 Type-check the project:
@@ -33,6 +71,7 @@ src/storage/notesStorage.ts     AsyncStorage persistence layer
 src/theme/theme.ts              Light and dark theme tokens
 src/types/note.ts               Shared note data types
 src/utils/                      Date, filtering, sorting, tag helpers
+scripts/open-app.js             Interactive Expo Go vs native CLI launcher
 ```
 
 ## Architecture Flow
@@ -76,7 +115,7 @@ type Note = {
 
 ## Design Decisions
 
-- Expo React Native keeps Android and iOS support simple while remaining production-friendly.
+- Expo React Native keeps Android and iOS support simple, while `expo-dev-client` and native run scripts allow CLI-style native builds when needed.
 - AsyncStorage is used because the app data model is small, local, and offline-first.
 - The app keeps navigation lightweight with local state instead of adding a navigation library for two screens.
 - Auto-save is debounced to avoid excessive storage writes while preserving changes quickly.
