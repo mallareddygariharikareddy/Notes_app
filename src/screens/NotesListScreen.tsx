@@ -15,16 +15,22 @@ import { AppTheme } from '../theme/theme';
 import { Note, SortMode } from '../types/note';
 import { filterAndSortNotes } from '../utils/notes';
 
+export type NotesViewMode = 'active' | 'trash';
+
 type NotesListScreenProps = {
   notes: Note[];
   query: string;
   sortMode: SortMode;
   theme: AppTheme;
+  viewMode: NotesViewMode;
   onCreate: () => void;
+  onHardDelete: (note: Note) => void;
   onOpen: (noteId: string) => void;
   onQueryChange: (query: string) => void;
+  onRestore: (note: Note) => void;
   onSortChange: (mode: SortMode) => void;
   onTogglePin: (note: Note) => void;
+  onViewModeChange: (mode: NotesViewMode) => void;
 };
 
 export function NotesListScreen({
@@ -32,21 +38,29 @@ export function NotesListScreen({
   query,
   sortMode,
   theme,
+  viewMode,
   onCreate,
+  onHardDelete,
   onOpen,
   onQueryChange,
+  onRestore,
   onSortChange,
   onTogglePin,
+  onViewModeChange,
 }: NotesListScreenProps) {
-  const visibleNotes = useMemo(() => filterAndSortNotes(notes, query, sortMode), [notes, query, sortMode]);
+  const activeNotes = useMemo(() => notes.filter((note) => typeof note.deletedAt !== 'number'), [notes]);
+  const deletedNotes = useMemo(() => notes.filter((note) => typeof note.deletedAt === 'number'), [notes]);
+  const sourceNotes = viewMode === 'trash' ? deletedNotes : activeNotes;
+  const visibleNotes = useMemo(() => filterAndSortNotes(sourceNotes, query, sortMode), [sourceNotes, query, sortMode]);
+  const isTrash = viewMode === 'trash';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Notes</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{isTrash ? 'Trash' : 'Notes'}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.muted }]}>
-            {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+            {sourceNotes.length} {sourceNotes.length === 1 ? 'note' : 'notes'}
           </Text>
         </View>
       </View>
@@ -74,6 +88,11 @@ export function NotesListScreen({
           <SortButton active={sortMode === 'created'} label="Created" theme={theme} onPress={() => onSortChange('created')} />
         </View>
 
+        <View style={[styles.segment, { backgroundColor: theme.colors.elevated }]}>
+          <SortButton active={!isTrash} label="Notes" theme={theme} onPress={() => onViewModeChange('active')} />
+          <SortButton active={isTrash} label={`Trash (${deletedNotes.length})`} theme={theme} onPress={() => onViewModeChange('trash')} />
+        </View>
+
         <FlatList
           contentContainerStyle={visibleNotes.length ? styles.list : styles.emptyList}
           data={visibleNotes}
@@ -81,31 +100,46 @@ export function NotesListScreen({
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
             <EmptyState
-              title={query.trim() ? 'No matches' : 'No notes yet'}
-              message={query.trim() ? 'Try a different title, word, or tag.' : 'Tap the add button to write your first note.'}
+              title={query.trim() ? 'No matches' : isTrash ? 'Trash is empty' : 'No notes yet'}
+              message={
+                query.trim()
+                  ? 'Try a different title, word, or tag.'
+                  : isTrash
+                    ? 'Soft-deleted notes will appear here.'
+                    : 'Tap the add button to write your first note.'
+              }
             />
           }
           renderItem={({ item }) => (
-            <NoteCard note={item} theme={theme} onOpen={onOpen} onTogglePin={onTogglePin} />
+            <NoteCard
+              note={item}
+              theme={theme}
+              onHardDelete={onHardDelete}
+              onOpen={onOpen}
+              onRestore={onRestore}
+              onTogglePin={onTogglePin}
+            />
           )}
           showsVerticalScrollIndicator={false}
         />
       </View>
 
-      <Pressable
-        accessibilityLabel="Create note"
-        accessibilityRole="button"
-        onPress={onCreate}
-        style={({ pressed }) => [
-          styles.fab,
-          {
-            backgroundColor: pressed ? theme.colors.elevated : theme.colors.accent,
-            shadowColor: theme.mode === 'dark' ? '#000000' : '#8A6A00',
-          },
-        ]}
-      >
-        <Text style={[styles.fabIcon, { color: theme.colors.accentText }]}>+</Text>
-      </Pressable>
+      {!isTrash && (
+        <Pressable
+          accessibilityLabel="Create note"
+          accessibilityRole="button"
+          onPress={onCreate}
+          style={({ pressed }) => [
+            styles.fab,
+            {
+              backgroundColor: pressed ? theme.colors.elevated : theme.colors.accent,
+              shadowColor: theme.mode === 'dark' ? '#000000' : '#8A6A00',
+            },
+          ]}
+        >
+          <Text style={[styles.fabIcon, { color: theme.colors.accentText }]}>+</Text>
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }

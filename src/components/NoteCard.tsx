@@ -9,13 +9,21 @@ type NoteCardProps = {
   note: Note;
   theme: AppTheme;
   onOpen: (noteId: string) => void;
-  onTogglePin: (note: Note) => void;
+  onHardDelete?: (note: Note) => void;
+  onRestore?: (note: Note) => void;
+  onTogglePin?: (note: Note) => void;
 };
 
-export function NoteCard({ note, theme, onOpen, onTogglePin }: NoteCardProps) {
+export function NoteCard({ note, theme, onOpen, onHardDelete, onRestore, onTogglePin }: NoteCardProps) {
+  const isDeleted = typeof note.deletedAt === 'number';
+
   return (
     <Pressable
-      onPress={() => onOpen(note.id)}
+      onPress={() => {
+        if (!isDeleted) {
+          onOpen(note.id);
+        }
+      }}
       style={({ pressed }) => [
         styles.card,
         {
@@ -28,20 +36,43 @@ export function NoteCard({ note, theme, onOpen, onTogglePin }: NoteCardProps) {
         <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
           {getNoteDisplayTitle(note)}
         </Text>
-        <Pressable
-          accessibilityLabel={note.pinned ? 'Unpin note' : 'Pin note'}
-          accessibilityRole="button"
-          hitSlop={10}
-          onPress={() => onTogglePin(note)}
-        >
-          <Text style={[styles.pin, { color: note.pinned ? theme.colors.accent : theme.colors.muted }]}>★</Text>
-        </Pressable>
+        {isDeleted ? (
+          <View style={styles.deletedActions}>
+            <Pressable
+              accessibilityLabel="Restore note"
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={() => onRestore?.(note)}
+            >
+              <Text style={[styles.actionText, { color: theme.colors.accent }]}>Restore</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Permanently delete note"
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={() => onHardDelete?.(note)}
+            >
+              <Text style={[styles.actionText, { color: theme.colors.danger }]}>Delete</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            accessibilityLabel={note.pinned ? 'Unpin note' : 'Pin note'}
+            accessibilityRole="button"
+            hitSlop={10}
+            onPress={() => onTogglePin?.(note)}
+          >
+            <Text style={[styles.pin, { color: note.pinned ? theme.colors.accent : theme.colors.muted }]}>★</Text>
+          </Pressable>
+        )}
       </View>
       <Text numberOfLines={3} style={[styles.preview, { color: theme.colors.muted }]}>
         {getNotePreview(note)}
       </Text>
       <View style={styles.footer}>
-        <Text style={[styles.date, { color: theme.colors.muted }]}>{formatNoteDate(note.updatedAt)}</Text>
+        <Text style={[styles.date, { color: theme.colors.muted }]}>
+          {isDeleted ? `Deleted ${formatNoteDate(note.deletedAt ?? note.updatedAt)}` : formatNoteDate(note.updatedAt)}
+        </Text>
         <View style={styles.tags}>
           {note.tags.slice(0, 2).map((tag) => (
             <View key={tag} style={[styles.tag, { backgroundColor: theme.colors.chip }]}>
@@ -55,6 +86,10 @@ export function NoteCard({ note, theme, onOpen, onTogglePin }: NoteCardProps) {
 }
 
 const styles = StyleSheet.create({
+  actionText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
   card: {
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -64,6 +99,11 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  deletedActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
   },
   footer: {
     alignItems: 'center',

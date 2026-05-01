@@ -43,7 +43,38 @@ export async function saveNote(note: Note): Promise<void> {
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(nextNotes));
 }
 
-export async function deleteNote(noteId: string): Promise<void> {
+export async function softDeleteNote(noteId: string): Promise<void> {
+  const notes = await listNotes();
+  const deletedAt = Date.now();
+  await AsyncStorage.setItem(
+    NOTES_KEY,
+    JSON.stringify(
+      notes.map((note) =>
+        note.id === noteId ? { ...note, deletedAt, pinned: false, updatedAt: deletedAt } : note,
+      ),
+    ),
+  );
+}
+
+export async function restoreNote(noteId: string): Promise<void> {
+  const notes = await listNotes();
+  const restoredAt = Date.now();
+  await AsyncStorage.setItem(
+    NOTES_KEY,
+    JSON.stringify(
+      notes.map((note) => {
+        if (note.id !== noteId) {
+          return note;
+        }
+
+        const { deletedAt, ...restored } = note;
+        return { ...restored, updatedAt: restoredAt };
+      }),
+    ),
+  );
+}
+
+export async function hardDeleteNote(noteId: string): Promise<void> {
   const notes = await listNotes();
   await AsyncStorage.setItem(
     NOTES_KEY,
@@ -60,6 +91,7 @@ function isValidNote(value: unknown): value is Note {
     Array.isArray(note.tags) &&
     typeof note.createdAt === 'number' &&
     typeof note.updatedAt === 'number' &&
-    typeof note.pinned === 'boolean'
+    typeof note.pinned === 'boolean' &&
+    (note.deletedAt === undefined || typeof note.deletedAt === 'number')
   );
 }
